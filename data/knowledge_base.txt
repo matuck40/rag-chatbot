@@ -1,0 +1,11 @@
+A empresa Acme oferece três produtos:
+1. Plano Basic: suporte por email, até 1 projeto.
+2. Plano Pro: suporte prioritário, até 10 projetos.
+3. Plano Enterprise: projetos ilimitados, gerente dedicado e integração personalizada.
+
+Horário de suporte:
+- Segunda a sexta, das 9h às 18h.
+
+Política de cancelamento:
+- O cliente pode cancelar a qualquer momento.
+- Não há reembolso proporcional após o pagamento do mês atual.
