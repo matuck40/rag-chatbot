@@ -14,6 +14,10 @@ app = FastAPI()
 def health():
     return {"status": "ok"}
 
+@app.get("/status")
+def status():
+    return {"api": "running", "feature": "basic-rag"}
+
 
 @app.post("/ask")
 def ask(req: QuestionRequest):
