@@ -1,11 +1,311 @@
-A empresa Acme oferece três produtos:
-1. Plano Basic: suporte por email, até 1 projeto.
-2. Plano Pro: suporte prioritário, até 10 projetos.
-3. Plano Enterprise: projetos ilimitados, gerente dedicado e integração personalizada.
+# Base de Conhecimento Acme
 
-Horário de suporte:
-- Segunda a sexta, das 9h às 18h.
+## Visão geral da empresa
+A Acme é uma plataforma SaaS voltada para gestão de projetos, colaboração entre equipes e automação de fluxos internos. A empresa oferece planos para pequenos times, empresas em crescimento e grandes organizações com necessidade de governança, segurança e integrações avançadas.
 
-Política de cancelamento:
-- O cliente pode cancelar a qualquer momento.
-- Não há reembolso proporcional após o pagamento do mês atual.
+A plataforma permite criar projetos, organizar tarefas, acompanhar entregas, compartilhar arquivos, automatizar notificações e gerar relatórios operacionais. Alguns recursos variam de acordo com o plano contratado.
+
+---
+
+## Planos disponíveis
+
+### Plano Basic
+O Plano Basic é indicado para profissionais autônomos e times muito pequenos que precisam organizar trabalho em um único espaço.
+
+Recursos incluídos no Plano Basic:
+- até 1 projeto ativo
+- até 5 usuários
+- suporte por email
+- quadros de tarefas
+- checklists simples
+- comentários em tarefas
+- armazenamento de até 5 GB
+
+Limitações do Plano Basic:
+- não inclui integrações personalizadas
+- não inclui gerente de conta
+- não inclui API avançada
+- não inclui permissões granulares por equipe
+- não inclui SSO
+
+Preço de referência:
+- cobrança mensal por workspace
+
+---
+
+### Plano Pro
+O Plano Pro é indicado para equipes em crescimento que precisam de mais capacidade operacional e suporte mais rápido.
+
+Recursos incluídos no Plano Pro:
+- até 10 projetos ativos
+- até 50 usuários
+- suporte prioritário
+- automações básicas
+- relatórios de produtividade
+- permissões por função
+- armazenamento de até 100 GB
+- integração com Slack
+- integração com Google Drive
+- acesso à API pública padrão
+
+Limitações do Plano Pro:
+- não inclui projetos ilimitados
+- não inclui gerente dedicado
+- não inclui ambiente sandbox exclusivo
+- não inclui integração totalmente personalizada
+
+Preço de referência:
+- cobrança mensal por workspace
+- desconto disponível no pagamento anual
+
+---
+
+### Plano Enterprise
+O Plano Enterprise é indicado para empresas com operação complexa, múltiplos times e requisitos de segurança, governança e integração avançada.
+
+Recursos incluídos no Plano Enterprise:
+- projetos ilimitados
+- usuários ilimitados mediante contrato
+- gerente dedicado
+- integração personalizada
+- onboarding assistido
+- ambiente sandbox
+- SSO
+- trilha de auditoria
+- exportação avançada de dados
+- SLA contratual
+- relatórios executivos
+- retenção estendida de logs
+- permissões granulares por unidade ou equipe
+
+Observações sobre o Plano Enterprise:
+- algumas funcionalidades dependem de escopo contratado
+- prazos de implementação variam conforme integração
+- suporte pode incluir canal direto com time técnico
+
+Preço de referência:
+- sob consulta comercial
+- valor definido conforme número de usuários, integrações e necessidades de compliance
+
+---
+
+## Comparação rápida entre planos
+
+Resumo:
+- Basic: solução inicial para uso simples e até 1 projeto
+- Pro: melhor para times em crescimento e uso operacional recorrente
+- Enterprise: melhor para grandes empresas com exigência de escala, segurança e personalização
+
+Diferenças importantes:
+- apenas o Enterprise possui projetos ilimitados
+- apenas o Enterprise possui gerente dedicado
+- o Basic oferece suporte por email
+- o Pro oferece suporte prioritário
+- o Enterprise pode operar com SLA contratual
+- o Pro já possui integração com Slack e Google Drive
+- o Enterprise permite integração personalizada
+
+---
+
+## Suporte
+
+### Horário de suporte padrão
+O horário de atendimento padrão da Acme é de segunda a sexta, das 9h às 18h, considerando dias úteis.
+
+### Canais de suporte por plano
+- Basic: suporte por email
+- Pro: suporte prioritário
+- Enterprise: suporte com fluxo prioritário e possibilidade de canal dedicado, conforme contrato
+
+### Tempo de resposta estimado
+Tempos médios, sem caráter contratual:
+- Basic: até 1 dia útil
+- Pro: até 4 horas úteis
+- Enterprise: conforme SLA contratado
+
+Observação:
+Chamados enviados fora do horário comercial podem ser respondidos no próximo dia útil, exceto em contratos Enterprise com cobertura específica.
+
+---
+
+## Política de cancelamento
+
+O cliente pode solicitar cancelamento a qualquer momento pelo painel administrativo ou com apoio do suporte, dependendo do plano.
+
+Regras gerais de cancelamento:
+- o cancelamento impede renovação futura
+- o acesso permanece ativo até o fim do período já pago
+- não há reembolso proporcional após o pagamento do mês atual
+- cobranças anuais seguem as condições contratuais aceitas no momento da contratação
+- contas com pendências financeiras podem ter encerramento condicionado à regularização
+
+Para clientes Enterprise:
+- pode haver cláusulas adicionais em contrato
+- prazos de aviso prévio podem existir dependendo da negociação comercial
+
+---
+
+## Política de upgrade e downgrade
+
+Clientes podem alterar de plano conforme elegibilidade do workspace.
+
+### Upgrade
+Ao fazer upgrade:
+- novos recursos podem ser liberados no mesmo dia
+- a cobrança pode ser ajustada de forma proporcional, conforme regra comercial vigente
+- limites de projetos e usuários são ampliados conforme o novo plano
+
+### Downgrade
+Ao fazer downgrade:
+- alguns recursos deixam de ficar disponíveis
+- projetos acima do limite do novo plano podem precisar ser arquivados
+- integrações avançadas podem ser desativadas
+- o downgrade pode entrar em vigor no próximo ciclo de cobrança
+
+Exemplo:
+Se um cliente sair do Enterprise para o Pro, ele pode perder integrações personalizadas, sandbox exclusivo e algumas regras avançadas de governança.
+
+---
+
+## Usuários e limites
+
+### Limites por plano
+- Basic: até 5 usuários
+- Pro: até 50 usuários
+- Enterprise: conforme contrato
+
+### O que acontece ao atingir o limite
+Quando o workspace atinge o limite de usuários:
+- não é possível convidar novos membros
+- administradores visualizam um aviso no painel
+- pode ser necessário upgrade de plano
+
+### Tipos de usuário
+A plataforma pode incluir perfis como:
+- administrador
+- gerente
+- membro
+- visitante
+
+Nem todos os perfis estão disponíveis em todos os planos.
+
+---
+
+## Projetos e armazenamento
+
+### Limite de projetos
+- Basic: até 1 projeto ativo
+- Pro: até 10 projetos ativos
+- Enterprise: ilimitado
+
+### Armazenamento
+- Basic: até 5 GB
+- Pro: até 100 GB
+- Enterprise: conforme contrato
+
+### Regra sobre projetos arquivados
+Projetos arquivados não contam como ativos em algumas regras operacionais, mas isso pode variar por política de conta e plano contratado.
+
+---
+
+## API e integrações
+
+### API pública
+A Acme oferece API pública padrão a partir do Plano Pro.
+
+Possibilidades comuns da API:
+- listar projetos
+- listar tarefas
+- criar registros operacionais
+- consultar membros
+- atualizar status de itens
+
+### Integrações padrão
+Disponíveis no Pro ou superior:
+- Slack
+- Google Drive
+
+### Integrações personalizadas
+Disponíveis no Enterprise:
+- ERPs
+- CRMs
+- ferramentas internas
+- webhooks avançados
+- pipelines específicos
+
+Observação:
+Integrações personalizadas exigem avaliação técnica e podem ter prazo de implementação.
+
+---
+
+## Segurança e governança
+
+### Recursos por plano
+- Basic: segurança padrão da plataforma
+- Pro: permissões por função
+- Enterprise: SSO, auditoria, retenção estendida de logs e controles avançados
+
+### SSO
+O recurso de Single Sign-On está disponível no Plano Enterprise.
+
+### Auditoria
+A trilha de auditoria detalhada está disponível no Enterprise e pode registrar eventos administrativos relevantes.
+
+---
+
+## Onboarding e implantação
+
+### Basic
+Onboarding self-service com materiais de ajuda e documentação.
+
+### Pro
+Onboarding guiado com suporte ao setup inicial.
+
+### Enterprise
+Onboarding assistido, apoio técnico e planejamento de implantação conforme escopo.
+
+Prazo de implantação:
+- Basic: imediato
+- Pro: normalmente rápido
+- Enterprise: depende de integrações e configuração contratada
+
+---
+
+## Cobrança
+
+### Modalidades
+A cobrança pode ser mensal ou anual, conforme plano e contrato.
+
+### Renovação
+A renovação ocorre ao final do ciclo contratado, salvo cancelamento anterior.
+
+### Inadimplência
+Contas inadimplentes podem:
+- perder acesso temporariamente
+- ter recursos limitados
+- sofrer bloqueio administrativo até regularização
+
+---
+
+## Casos comuns de dúvidas
+
+Pergunta: O Basic tem integração com Slack?
+Resposta: Não. Integração com Slack está disponível no Pro ou superior.
+
+Pergunta: O Pro tem projetos ilimitados?
+Resposta: Não. O Pro permite até 10 projetos ativos.
+
+Pergunta: O Enterprise tem gerente dedicado?
+Resposta: Sim.
+
+Pergunta: Existe reembolso proporcional?
+Resposta: Não há reembolso proporcional após o pagamento do mês atual.
+
+Pergunta: Qual é o horário de suporte?
+Resposta: Segunda a sexta, das 9h às 18h.
+
+Pergunta: O Enterprise inclui SSO?
+Resposta: Sim.
+
+Pergunta: Posso cancelar a qualquer momento?
+Resposta: Sim, mas o acesso segue até o fim do período pago e podem existir regras contratuais adicionais no Enterprise.
