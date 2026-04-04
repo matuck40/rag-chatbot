@@ -23,3 +23,22 @@ def chunk_text(text: str, chunk_size: int = 500) -> list[str]:
         start = end
 
     return chunks
+
+def chunk_by_sections(text: str) -> list[str]:
+    chunks = []
+    current_chunk = ""
+
+    for line in text.splitlines():
+        if (line.startswith("# ") or line.startswith("## ")) and current_chunk:
+            chunks.append(current_chunk.strip())
+            current_chunk = line
+        else:
+            if current_chunk:
+                current_chunk += "\n" + line
+            else:
+                current_chunk = line
+
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+
+    return chunks
