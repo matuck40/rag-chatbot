@@ -54,8 +54,8 @@ def ask(req: QuestionRequest):
     # Get context from question using the RAG service
     context, sources = get_context_from_question(req.question, chunk_embeddings)
 
-    # Ask the LLM for an answer based on the question, context, and system prompt
-    answer = ask_llm(req.question, context, system_prompt)
+    # Ask the LLM for an answer based on the question, context, system prompt, and history
+    answer = ask_llm(req.question, context, system_prompt, [msg.dict() for msg in req.history])
     
     return {
         "answer": answer,
