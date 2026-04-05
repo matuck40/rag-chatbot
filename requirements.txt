@@ -3,3 +3,5 @@ uvicorn
 pydantic
 openai
 python-dotenv
+SQLAlchemy>=1.4
+psycopg-binary
