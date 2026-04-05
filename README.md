@@ -1,19 +1,82 @@
-# rag-chatbot
+# RAG Chatbot com Histórico de Conversas
 
-API simples em FastAPI conectada a um modelo da OpenAI.
+API em FastAPI conectada a um modelo da OpenAI com armazenamento de histórico em PostgreSQL.
 
-## O que faz
+## ✨ Funcionalidades
 
-A aplicação expõe endpoints HTTP para:
+- **RAG (Retrieval-Augmented Generation)**: Busca informações relevantes na base de conhecimento
+- **Histórico de Conversas**: Armazena e recupera conversas completas usando PostgreSQL
+- **Sessões de Chat**: Suporte a múltiplas sessões de conversa independentes
+- **API REST**: Endpoints para perguntas, histórico e saúde do sistema
 
-- verificar se o servidor está no ar
-- enviar uma pergunta
-- receber uma resposta gerada por IA
+## 📋 Requisitos
+
+- macOS, Linux ou Windows
+- Python 3.11+
+- PostgreSQL 12+
+- VS Code opcional
+- Chave da OpenAI
+
+## 🚀 Instalação Rápida
+
+### 1. Clonar/Configurar Ambiente
+
+```bash
+cd ~/projects/rag-chatbot
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. Configurar PostgreSQL
+
+**macOS:**
+```bash
+brew install postgresql
+brew services start postgresql
+createdb rag_chatbot
+```
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo -u postgres createdb rag_chatbot
+```
+
+### 3. Configurar Variáveis de Ambiente
+
+Edite o arquivo `.env`:
+
+```env
+OPENAI_API_KEY=sk-sua-chave-aqui
+DATABASE_URL=postgresql://localhost/rag_chatbot
+```
+
+### 4. Inicializar Banco de Dados
+
+```bash
+python init_db.py
+```
+
+### 5. Executar
+
+```bash
+./run.sh
+```
+
+Ou diretamente:
+```bash
+source .venv/bin/activate
+uvicorn app.main:app --reload
+```
 
 ## Requisitos
 
 - macOS, Linux ou Windows
 - Python 3.11+
+- PostgreSQL database
 - VS Code opcional
 - uma chave da OpenAI
 
@@ -57,6 +120,57 @@ Crie um arquivo chamado `.env` na raiz do projeto com este formato:
 
 ```env
 OPENAI_API_KEY=sk-sua-chave-aqui
+DATABASE_URL=postgresql://user:password@localhost/rag_chatbot
+```
+
+## 📡 API Endpoints
+
+### GET `/health`
+Verifica se o servidor está funcionando.
+
+**Resposta:**
+```json
+{"status": "ok"}
+```
+
+### POST `/ask`
+Envia uma pergunta e recebe resposta com contexto.
+
+**Request Body:**
+```json
+{
+  "question": "Qual é a capital do Brasil?",
+  "session_id": "abc-123-def",
+  "history": [
+    {"role": "user", "content": "Olá"},
+    {"role": "assistant", "content": "Olá! Como posso ajudar?"}
+  ]
+}
+```
+
+**Resposta:**
+```json
+{
+  "answer": "A capital do Brasil é Brasília.",
+  "sources": ["fonte1", "fonte2"],
+  "session_id": "abc-123-def"
+}
+```
+
+### GET `/conversations/{session_id}`
+Recupera histórico completo de uma conversa.
+
+**Resposta:**
+```json
+{
+  "session_id": "abc-123-def",
+  "messages": [
+    {"role": "user", "content": "Olá"},
+    {"role": "assistant", "content": "Olá! Como posso ajudar?"},
+    {"role": "user", "content": "Qual é a capital do Brasil?"},
+    {"role": "assistant", "content": "A capital do Brasil é Brasília."}
+  ]
+}
 ```
 
 
@@ -93,6 +207,13 @@ client = OpenAI()
 
 class QuestionRequest(BaseModel):
     question: str
+    history: Optional[List[Message]] = None
+    session_id: Optional[str] = None
+
+
+class Message(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
 
 
 @app.get("/health")
@@ -128,23 +249,74 @@ source .venv/bin/activate
 uvicorn app.main:app --reload
 ```
 
-## Como testar
+## 🧪 Como Testar
 
-Com o servidor rodando, abra no navegador:
+Com o servidor rodando, acesse a documentação interativa:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-### Endpoint de saúde
+### Teste Básico
 
-Abra:
+1. **Health Check:**
+   ```bash
+   curl http://127.0.0.1:8000/health
+   ```
 
-```text
-http://127.0.0.1:8000/health
+2. **Fazer uma pergunta:**
+   ```bash
+   curl -X POST "http://127.0.0.1:8000/ask" \
+        -H "Content-Type: application/json" \
+        -d '{"question": "Olá, como você funciona?"}'
+   ```
+
+3. **Ver histórico:**
+   ```bash
+   curl "http://127.0.0.1:8000/conversations/$(uuidgen)"
+   ```
+
+## 🔧 Troubleshooting
+
+### Erro de conexão com PostgreSQL
+- Verifique se PostgreSQL está rodando: `brew services list` (macOS) ou `sudo systemctl status postgresql` (Linux)
+- Confirme que o banco `rag_chatbot` existe: `psql -l`
+- Verifique a variável `DATABASE_URL` no `.env`
+
+### Erro de chave OpenAI
+- Confirme que `OPENAI_API_KEY` está definida no `.env`
+- Verifique se a chave é válida no [dashboard da OpenAI](https://platform.openai.com/api-keys)
+
+### ImportError ou ModuleNotFoundError
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-Resposta esperada:
+## 📁 Estrutura do Projeto
+
+```
+rag-chatbot/
+├── app/
+│   ├── main.py              # API FastAPI
+│   ├── models.py            # Modelos Pydantic e SQLAlchemy
+│   ├── services/
+│   │   ├── database_service.py  # Serviço de banco de dados
+│   │   └── rag_service.py   # Serviço RAG
+│   ├── embedding.py         # Geração de embeddings
+│   ├── knowledge.py         # Processamento da base de conhecimento
+│   └── llm.py              # Integração com OpenAI
+├── data/
+│   ├── knowledge_base.txt  # Base de conhecimento
+│   └── chunk_embeddings.json  # Embeddings em cache
+├── alembic/                # Migrações do banco
+├── prompts/
+│   └── system_prompt.txt   # Prompt do sistema
+├── .env                    # Variáveis de ambiente
+├── requirements.txt        # Dependências Python
+├── init_db.py             # Script de inicialização do banco
+└── run.sh                 # Script de execução
+```
 
 ```json
 {"status":"ok"}
