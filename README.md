@@ -59,6 +59,18 @@ Crie um arquivo chamado `.env` na raiz do projeto com este formato:
 OPENAI_API_KEY=sk-sua-chave-aqui
 ```
 
+## Configurar PostgreSQL
+
+Adicione também a URL do banco no `.env`:
+
+```env
+DATABASE_URL=postgresql://usuario:senha@localhost:5432/rag_chatbot
+```
+
+O app cria a tabela `chat_interactions` automaticamente ao iniciar.
+Quando o PostgreSQL estiver fora do ar, o endpoint `/ask` ainda funciona, mas o campo `historic`
+volta vazio e o modelo não recebe histórico anterior.
+
 
 ## Exemplo de `run.sh`
 
