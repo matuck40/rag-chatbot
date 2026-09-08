@@ -26,7 +26,7 @@ PostgreSQL  (tables: conversations, messages; schema in alembic/versions/001_*.p
 
 Components, by file:
 
-- `app/main.py`: builds the FastAPI app and, at import time, loads and embeds the knowledge base. `POST /ask` takes a `question`, an optional `session_id` (a UUID4 is generated if absent) and an optional `history` list. If `history` is not sent, prior messages for that session are loaded from the database. After the LLM answers, the user message and the assistant message are saved. `GET /conversations/{session_id}` returns the stored messages. `GET /health` returns `{"status": "ok"}`.
+- `app/main.py`: builds the FastAPI app and, at import time, loads and embeds the knowledge base. `POST /ask` takes a `question`, an optional `session_id` (a UUID4 is generated if absent) and an optional `history` list. If `history` is absent or empty, prior messages for that session are loaded from the database. After the LLM answers, the user message and the assistant message are saved. `GET /conversations/{session_id}` returns the stored messages. `GET /health` returns `{"status": "ok"}`.
 - `app/knowledge.py`: `load_system_prompt` reads `prompts/system_prompt.txt`; `chunk_by_sections` starts a new chunk at every line beginning with `# ` or `## ` (`### ` headings stay inside their parent chunk). The sample knowledge base yields 14 chunks. `load_knowledge_base` and `chunk_text` in the same file are not called anywhere.
 - `app/embedding.py`: reads `data/knowledge_base.txt`, calls `text-embedding-3-small`, computes the dot product in plain Python, and caches chunk embeddings in `data/chunk_embeddings.json`. The cache is reused only if the knowledge file's modification time is unchanged; a change to the chunking function alone does not invalidate it.
 - `app/services/rag_service.py`: retrieval. Returns the concatenated top-3 chunks as context and a `sources` list with each chunk's score and its first 200 characters.
@@ -109,8 +109,7 @@ Sending the returned `session_id` in the next request continues the same convers
 - A limit on conversation length: the full stored history of a session is replayed into every prompt.
 - Access control on conversations: anyone who knows a `session_id` can read and extend that conversation.
 - Configuration of model names or the number of retrieved chunks; both are hard-coded.
-- Accurate in-code comments in two places: the header of `app/main.py` lists `GET /status` and `GET /chunks` endpoints that do not exist, and the docstring of `init_db.py` says it uses Alembic migrations when it calls `create_all`.
 
 ## Author
 
-Lucca Matuck, PhD in Engineering Physics. Signal processing and instrumentation for physical measurement; also builds and operates management systems in production.
+Lucca Matuck, PhD in Engineering Physics. [github.com/matuck40](https://github.com/matuck40)

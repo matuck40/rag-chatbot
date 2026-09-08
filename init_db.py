@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Database initialization script for the RAG chatbot.
-This script creates the database tables using Alembic migrations.
+Creates the tables directly from the SQLAlchemy models (Base.metadata.create_all),
+without recording an Alembic revision. Use `alembic upgrade head` for the versioned path.
 """
 
 import os

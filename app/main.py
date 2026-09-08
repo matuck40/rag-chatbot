@@ -1,11 +1,11 @@
-## main.py
-# FastAPI app that serves as the backend for the RAG chatbot. It loads the knowledge base, creates chunks and embeddings, and provides endpoints for asking questions and checking health/status.
-
-# The app has the following endpoints:
-# - GET /health: Returns a simple health check response.
-# - GET /status: Returns the status of the API and the feature being tested.
-# - POST /ask: Accepts a question, generates an embedding for it, ranks the knowledge base chunks by similarity, and prints the top 3 most relevant chunks.
-# - GET /chunks: Loads the knowledge base, creates chunks and embeddings, and prints their counts for debugging purposes.
+# FastAPI app for the RAG chatbot. At import time it loads the knowledge base,
+# splits it into chunks and embeds them (cached in data/chunk_embeddings.json).
+#
+# Endpoints:
+# - GET /health: liveness check.
+# - POST /ask: embeds the question, retrieves the 3 most similar chunks, asks the
+#   LLM with the session history, stores both messages and returns the answer.
+# - GET /conversations/{session_id}: stored messages of a session.
 
 # Import necessary libraries and modules
 from pathlib import Path
