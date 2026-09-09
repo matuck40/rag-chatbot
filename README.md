@@ -1,412 +1,113 @@
-# RAG Chatbot com Histórico de Conversas
+A retrieval-augmented generation API: a FastAPI service that splits a Markdown knowledge base into sections, embeds them with the OpenAI embeddings API, ranks them in memory by dot-product similarity, answers questions with `gpt-4o-mini` grounded on the three best-matching chunks, and stores each conversation in PostgreSQL.
 
-API em FastAPI conectada a um modelo da OpenAI com armazenamento de histórico em PostgreSQL.
+## Architecture
 
-## ✨ Funcionalidades
+```
+client
+  |  POST /ask {question, session_id?, history?}
+  v
+app/main.py  (FastAPI: GET /health, POST /ask, GET /conversations/{session_id})
+  |
+  |-- startup (lifespan): data/knowledge_base.txt
+  |            -> app/knowledge.py      chunk_by_sections()  (split on "# " / "## " headings)
+  |            -> app/embedding.py      OpenAI text-embedding-3-small, one call per chunk
+  |            -> data/chunk_embeddings.json  (cache, reused while the file's mtime is
+  |                                            unchanged, git-ignored)
+  |
+  |-- app/services/rag_service.py     embed the question, dot product against every cached
+  |                                    chunk, keep the top 3 as context + "sources"
+  |-- app/llm.py                       OpenAI chat completion (gpt-4o-mini):
+  |                                    system prompt + context + prior turns + question
+  |-- app/services/database_service.py SQLAlchemy engine from DATABASE_URL,
+  |                                    reads/writes conversations and messages
+  v
+PostgreSQL  (tables: conversations, messages; schema in alembic/versions/001_*.py)
+```
 
-- **RAG (Retrieval-Augmented Generation)**: Busca informações relevantes na base de conhecimento
-- **Histórico de Conversas**: Armazena e recupera conversas completas usando PostgreSQL
-- **Sessões de Chat**: Suporte a múltiplas sessões de conversa independentes
-- **API REST**: Endpoints para perguntas, histórico e saúde do sistema
+Components, by file:
 
-## 📋 Requisitos
+- `app/main.py`: builds the FastAPI app and, at startup (FastAPI lifespan), loads and embeds the knowledge base. `POST /ask` takes a `question`, an optional `session_id` (a UUID4 is generated if absent) and an optional `history` list. If `history` is absent or empty, prior messages for that session are loaded from the database. After the LLM answers, the user message and the assistant message are saved. `GET /conversations/{session_id}` returns the stored messages. `GET /health` returns `{"status": "ok"}`.
+- `app/knowledge.py`: `load_system_prompt` reads `prompts/system_prompt.txt`; `chunk_by_sections` starts a new chunk at every line beginning with `# ` or `## ` (`### ` headings stay inside their parent chunk). The sample knowledge base yields 14 chunks.
+- `app/embedding.py`: reads `data/knowledge_base.txt`, calls `text-embedding-3-small` (the OpenAI client is created on first use), computes the dot product in plain Python, and caches chunk embeddings in `data/chunk_embeddings.json`. The cache is reused only if the knowledge file's modification time is unchanged; a change to the chunking function alone does not invalidate it.
+- `app/services/rag_service.py`: retrieval. Returns the concatenated top-3 chunks as context and a `sources` list with each chunk's score and its first 200 characters.
+- `app/llm.py`: sends two system messages (the prompt file, then `Contexto:\n<chunks>`), then the history turns, then the question, to `gpt-4o-mini`.
+- `app/schemas.py`: the Pydantic request models (`QuestionRequest`, `Message`). `app/models.py`: the SQLAlchemy ORM models (`Conversation`, `MessageDB`).
+- `app/services/database_service.py`: `DatabaseService`, a module-level singleton created at import (the engine only connects on first use). It opens a session per operation and has two methods, `save_message_to_conversation` and `get_conversation_history`.
+- `alembic/`, `alembic.ini`: one migration (`001`) creating `conversations` and `messages`. `alembic/env.py` uses `DATABASE_URL` when it is set (importing `app` loads `.env`) and falls back to the placeholder in `alembic.ini` otherwise.
+- `tests/`: chunking, ranking, cache behaviour and the three endpoints, with the OpenAI calls and the database replaced by fakes. `.github/workflows/tests.yml` runs `ruff` and `pytest` on every push.
+- `prompts/system_prompt.txt`: the assistant persona (a support agent for a fictional company "Acme"), in Brazilian Portuguese, instructing the model to answer only from the supplied context.
+- `data/knowledge_base.txt`: the sample knowledge base (plans, billing, support policies of "Acme"), in Portuguese, about 300 lines.
 
-- macOS, Linux ou Windows
-- Python 3.11+
-- PostgreSQL 12+
-- VS Code opcional
-- Chave da OpenAI
+Retrieval happens in process, against the list of chunk embeddings held in memory since startup. PostgreSQL stores chat history only; there is no vector extension and no vector index.
 
-## 🚀 Instalação Rápida
+## Example
 
-### 1. Clonar/Configurar Ambiente
+The example below is illustrative, not captured from a live run (without a valid OpenAI key the app cannot finish starting: the embeddings are generated at startup when no cache exists). The request and response fields match the code; the answer text and scores are placeholders. The previews are the first characters of real chunks of `data/knowledge_base.txt`.
 
 ```bash
-cd ~/projects/rag-chatbot
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+curl -s -X POST http://127.0.0.1:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Quantos usuários o Plano Basic permite?"}'
 ```
 
-### 2. Configurar PostgreSQL
-
-**macOS:**
-```bash
-brew install postgresql
-brew services start postgresql
-createdb rag_chatbot
-```
-
-**Ubuntu/Debian:**
-```bash
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-sudo systemctl start postgresql
-sudo -u postgres createdb rag_chatbot
-```
-
-### 3. Configurar Variáveis de Ambiente
-
-Edite o arquivo `.env`:
-
-```env
-OPENAI_API_KEY=sk-sua-chave-aqui
-DATABASE_URL=postgresql://localhost/rag_chatbot
-```
-
-### 4. Inicializar Banco de Dados
-
-```bash
-python init_db.py
-```
-
-### 5. Executar
-
-```bash
-./run.sh
-```
-
-Ou diretamente:
-```bash
-source .venv/bin/activate
-uvicorn app.main:app --reload
-```
-
-## Requisitos
-
-- macOS, Linux ou Windows
-- Python 3.11+
-- PostgreSQL database
-- VS Code opcional
-- uma chave da OpenAI
-
-## Estrutura esperada
-
-```text
-rag-chatbot/
-  app/
-    main.py
-  .venv/
-  .env
-  .gitignore
-  requirements.txt
-  run.sh
-```
-
-## Instalação
-
-### 1. Entrar na pasta do projeto
-
-```bash
-cd ~/projects/rag-chatbot
-```
-
-### 2. Criar o ambiente virtual
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 3. Instalar dependências
-
-```bash
-pip install -r requirements.txt
-```
-
-## Configurar a chave da OpenAI
-
-Crie um arquivo chamado `.env` na raiz do projeto com este formato:
-
-```env
-OPENAI_API_KEY=sk-sua-chave-aqui
-DATABASE_URL=postgresql://user:password@localhost/rag_chatbot
-```
-
-## 📡 API Endpoints
-
-### GET `/health`
-Verifica se o servidor está funcionando.
-
-**Resposta:**
-```json
-{"status": "ok"}
-```
-
-### POST `/ask`
-Envia uma pergunta e recebe resposta com contexto.
-
-**Request Body:**
 ```json
 {
-  "question": "Qual é a capital do Brasil?",
-  "session_id": "abc-123-def",
-  "history": [
-    {"role": "user", "content": "Olá"},
-    {"role": "assistant", "content": "Olá! Como posso ajudar?"}
-  ]
+  "answer": "O Plano Basic permite até 5 usuários. ...",
+  "sources": [
+    {"score": 0.61, "text_preview": "## Usuários e limites\n\n### Limites por plano\n- Basic: até 5 usuários\n- Pro: até ..."},
+    {"score": 0.55, "text_preview": "## Planos disponíveis\n\n### Plano Basic\nO Plano Basic é indicado para profissiona..."},
+    {"score": 0.47, "text_preview": "## Comparação rápida entre planos\n\nResumo:\n- Basic: solução inicial para uso sim..."}
+  ],
+  "session_id": "8f3c2c0e-1b7e-4b2e-9a4e-2f1c3d4e5f60"
 }
 ```
 
-**Resposta:**
-```json
-{
-  "answer": "A capital do Brasil é Brasília.",
-  "sources": ["fonte1", "fonte2"],
-  "session_id": "abc-123-def"
-}
-```
+Sending the returned `session_id` in the next request continues the same conversation. `GET /conversations/<session_id>` returns `{"session_id": "...", "messages": [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]}`.
 
-### GET `/conversations/{session_id}`
-Recupera histórico completo de uma conversa.
+## Running locally
 
-**Resposta:**
-```json
-{
-  "session_id": "abc-123-def",
-  "messages": [
-    {"role": "user", "content": "Olá"},
-    {"role": "assistant", "content": "Olá! Como posso ajudar?"},
-    {"role": "user", "content": "Qual é a capital do Brasil?"},
-    {"role": "assistant", "content": "A capital do Brasil é Brasília."}
-  ]
-}
-```
+1. Python 3.9 or newer. No version is declared in the repository; 3.9 is the floor implied by the built-in generic type hints in the code (such as `list[float]`). Create a virtual environment and install the dependencies; versions are not pinned in `requirements.txt`.
 
-
-## Exemplo de `run.sh`
-
-Crie um arquivo `run.sh` na raiz:
-
-```bash
-#!/bin/bash
-cd "$(dirname "$0")"
-source .venv/bin/activate
-uvicorn app.main:app --reload
-```
-
-Deixe executável:
-
-```bash
-chmod +x run.sh
-```
-
-## Exemplo de `app/main.py`
-
-```python
-from fastapi import FastAPI
-from pydantic import BaseModel
-from openai import OpenAI
-from dotenv import load_dotenv
-
-load_dotenv()
-
-app = FastAPI()
-client = OpenAI()
-
-
-class QuestionRequest(BaseModel):
-    question: str
-    history: Optional[List[Message]] = None
-    session_id: Optional[str] = None
-
-
-class Message(BaseModel):
-    role: str  # "user" or "assistant"
-    content: str
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-
-
-@app.post("/ask")
-def ask(req: QuestionRequest):
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "user", "content": req.question}
-        ]
-    )
-
-    answer = response.choices[0].message.content
-    return {"answer": answer}
-```
-
-## Rodar o servidor
-
-Na raiz do projeto:
-
-```bash
-./run.sh
-```
-
-Ou, sem script:
-
-```bash
-source .venv/bin/activate
-uvicorn app.main:app --reload
-```
-
-## 🧪 Como Testar
-
-Com o servidor rodando, acesse a documentação interativa:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-### Teste Básico
-
-1. **Health Check:**
    ```bash
-   curl http://127.0.0.1:8000/health
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt   # or requirements-dev.txt to also get pytest and ruff
    ```
 
-2. **Fazer uma pergunta:**
+2. PostgreSQL. The migration uses only standard column types and no extensions. Create the database:
+
    ```bash
-   curl -X POST "http://127.0.0.1:8000/ask" \
-        -H "Content-Type: application/json" \
-        -d '{"question": "Olá, como você funciona?"}'
+   createdb rag_chatbot
    ```
 
-3. **Ver histórico:**
+3. Copy `.env.example` to `.env` and fill in both variables. `OPENAI_API_KEY` is read by the `openai` client. `DATABASE_URL` is a SQLAlchemy URL such as `postgresql://USER:PASSWORD@localhost:5432/rag_chatbot`. If `DATABASE_URL` is missing, `database_service.py` falls back to `postgresql://user:password@localhost/rag_chatbot`.
+
+4. Create the tables. Alembic reads `DATABASE_URL` from `.env`:
+
    ```bash
-   curl "http://127.0.0.1:8000/conversations/$(uuidgen)"
+   alembic upgrade head
    ```
 
-## 🔧 Troubleshooting
+5. Start the API. The first start makes one embeddings call per section of the knowledge base and writes `data/chunk_embeddings.json`; later starts reuse it until `data/knowledge_base.txt` changes.
 
-### Erro de conexão com PostgreSQL
-- Verifique se PostgreSQL está rodando: `brew services list` (macOS) ou `sudo systemctl status postgresql` (Linux)
-- Confirme que o banco `rag_chatbot` existe: `psql -l`
-- Verifique a variável `DATABASE_URL` no `.env`
+   ```bash
+   uvicorn app.main:app --reload
+   ```
 
-### Erro de chave OpenAI
-- Confirme que `OPENAI_API_KEY` está definida no `.env`
-- Verifique se a chave é válida no [dashboard da OpenAI](https://platform.openai.com/api-keys)
+   `./run.sh` does the same after activating `.venv`. Interactive docs are served at `http://127.0.0.1:8000/docs`.
 
-### ImportError ou ModuleNotFoundError
-```bash
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+## What is not here
 
-## 📁 Estrutura do Projeto
+- Tests against a real database or the real OpenAI API: the test suite replaces both with fakes.
+- Authentication, rate limiting or CORS configuration on the endpoints.
+- Deployment: no Dockerfile, container configuration or CI.
+- Evaluation of answer quality or retrieval quality.
+- A vector store: similarity is computed in memory over a JSON file, which is adequate for the ~300-line sample and not designed for larger corpora.
+- Error handling: there is no `except` block in `app/`. If PostgreSQL or the OpenAI API is unreachable, `POST /ask` and `GET /conversations/{session_id}` return a 500. On `/ask`, the database write happens after the LLM call, so a database failure loses an answer that was already generated.
+- A limit on conversation length: the full stored history of a session is replayed into every prompt.
+- Access control on conversations: anyone who knows a `session_id` can read and extend that conversation.
+- Configuration of model names or the number of retrieved chunks; both are hard-coded.
 
-```
-rag-chatbot/
-├── app/
-│   ├── main.py              # API FastAPI
-│   ├── models.py            # Modelos Pydantic e SQLAlchemy
-│   ├── services/
-│   │   ├── database_service.py  # Serviço de banco de dados
-│   │   └── rag_service.py   # Serviço RAG
-│   ├── embedding.py         # Geração de embeddings
-│   ├── knowledge.py         # Processamento da base de conhecimento
-│   └── llm.py              # Integração com OpenAI
-├── data/
-│   ├── knowledge_base.txt  # Base de conhecimento
-│   └── chunk_embeddings.json  # Embeddings em cache
-├── alembic/                # Migrações do banco
-├── prompts/
-│   └── system_prompt.txt   # Prompt do sistema
-├── .env                    # Variáveis de ambiente
-├── requirements.txt        # Dependências Python
-├── init_db.py             # Script de inicialização do banco
-└── run.sh                 # Script de execução
-```
+## Author
 
-```json
-{"status":"ok"}
-```
-
-### Endpoint de pergunta
-
-Na página `/docs`:
-
-1. Abra `POST /ask`
-2. Clique em `Try it out`
-3. Envie um JSON como este:
-
-```json
-{
-  "question": "Explique o que é uma API de forma simples"
-}
-```
-
-Resposta esperada:
-
-```json
-{
-  "answer": "..."
-}
-```
-
-## Teste da chave
-
-Para verificar se o `.env` está sendo lido:
-
-```bash
-python -c "from dotenv import load_dotenv; load_dotenv(); import os; print(os.getenv('OPENAI_API_KEY'))"
-```
-
-Se aparecer `None`, o `.env` está incorreto ou não está sendo encontrado.
-
-## Problemas comuns
-
-### `python-dotenv could not parse statement`
-
-O arquivo `.env` está mal formatado.
-
-Formato certo:
-
-```env
-OPENAI_API_KEY=sk-sua-chave-aqui
-```
-
-### `No module named 'app'`
-
-Você provavelmente rodou o servidor de dentro da pasta `app`.
-
-Rode sempre na raiz do projeto:
-
-```bash
-cd ~/projects/rag-chatbot
-./run.sh
-```
-
-### `No API key provided`
-
-A chave não foi carregada. Verifique:
-
-- se o `.env` existe
-- se `load_dotenv()` está no código
-- se a variável está escrita como `OPENAI_API_KEY`
-
-### `invalid_api_key`
-
-A chave foi lida, mas está errada, incompleta ou expirada.
-
-## Segurança
-
-Não suba sua chave para o GitHub.
-
-Use um `.gitignore` assim:
-
-```gitignore
-.venv
-.env
-__pycache__/
-```
-
-## Próximos passos
-
-Sugestões de evolução:
-
-- adicionar prompt `system`
-- salvar histórico de perguntas e respostas
-- criar uma base simples para RAG
-- dockerizar a aplicação
-- fazer deploy
+Lucca Matuck, PhD in Engineering Physics. [github.com/matuck40](https://github.com/matuck40)

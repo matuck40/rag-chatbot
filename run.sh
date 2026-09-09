@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# garante que está na raiz do projeto
+# Run from the project root with the virtualenv in .venv
 cd "$(dirname "$0")"
 
 source .venv/bin/activate
