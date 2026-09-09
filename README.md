@@ -100,7 +100,7 @@ Sending the returned `session_id` in the next request continues the same convers
 
 - Tests against a real database or the real OpenAI API: the test suite replaces both with fakes.
 - Authentication, rate limiting or CORS configuration on the endpoints.
-- Deployment: no Dockerfile, container configuration or CI.
+- Deployment: no Dockerfile or container configuration.
 - Evaluation of answer quality or retrieval quality.
 - A vector store: similarity is computed in memory over a JSON file, which is adequate for the ~300-line sample and not designed for larger corpora.
 - Error handling: there is no `except` block in `app/`. If PostgreSQL or the OpenAI API is unreachable, `POST /ask` and `GET /conversations/{session_id}` return a 500. On `/ask`, the database write happens after the LLM call, so a database failure loses an answer that was already generated.
