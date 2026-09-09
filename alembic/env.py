@@ -1,7 +1,7 @@
+import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
@@ -18,8 +18,13 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from app.models import Base
+from app.models import Base  # importing `app` also loads .env
+
 target_metadata = Base.metadata
+
+# DATABASE_URL (from the environment or .env) takes precedence over alembic.ini.
+if os.getenv("DATABASE_URL"):
+    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"].replace("%", "%%"))
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
