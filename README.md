@@ -80,7 +80,7 @@ Sending the returned `session_id` in the next request continues the same convers
    createdb rag_chatbot
    ```
 
-3. Copy `.env.example` to `.env` and fill in both variables. `OPENAI_API_KEY` is read by the `openai` client. `DATABASE_URL` is a SQLAlchemy URL such as `postgresql://USER:PASSWORD@localhost:5432/rag_chatbot`. If `DATABASE_URL` is missing, `database_service.py` falls back to `postgresql://user:password@localhost/rag_chatbot`.
+3. Copy `.env.example` to `.env` and fill in both variables. `OPENAI_API_KEY` is read by the `openai` client. `DATABASE_URL` is a SQLAlchemy URL such as `postgresql+psycopg2://USER:PASSWORD@localhost:5432/rag_chatbot`. If `DATABASE_URL` is missing, `database_service.py` falls back to `postgresql+psycopg2://user:password@localhost/rag_chatbot`.
 
 4. Create the tables. Alembic reads `DATABASE_URL` from `.env`:
 
