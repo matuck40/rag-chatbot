@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from app.models import Conversation, MessageDB
 from app.schemas import Message
 
-DEFAULT_DATABASE_URL = "postgresql://user:password@localhost/rag_chatbot"
+DEFAULT_DATABASE_URL = "postgresql+psycopg2://user:password@localhost/rag_chatbot"
 
 
 class DatabaseService:
