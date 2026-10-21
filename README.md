@@ -1,3 +1,7 @@
+# rag-chatbot
+
+[![tests](https://github.com/matuck40/rag-chatbot/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/matuck40/rag-chatbot/actions/workflows/tests.yml)
+
 A retrieval-augmented generation API: a FastAPI service that splits a Markdown knowledge base into sections, embeds them with the OpenAI embeddings API, ranks them in memory by dot-product similarity, answers questions with `gpt-4o-mini` grounded on the three best-matching chunks, and stores each conversation in PostgreSQL.
 
 ## Architecture
